@@ -1,0 +1,30 @@
+version: "2.1"
+
+services:
+  app:
+    image: maven:3-jdk-8-alpine
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_DB
+      - POSTGRES_HOST
+      - POSTGRES_PASSWORD
+      - POSTGRES_PORT
+      - JDBC_DATABASE_URL=jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      - HTTP_SERVER_PORT
+      - HTTP_SERVER_HOST
+      - API_VERSION
+    ports:
+      - 8081:8080
+    volumes:
+      - ./app:/app:delegated
+      - ~/.m2:/root/.m2:delegated
+    working_dir: "/app"
+    command: ["sh", "redeploy.sh"]
+  postgres:
+    image: postgres:9.6
+    environment:
+      - POSTGRES_DB
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+    ports:
+      - 5432
