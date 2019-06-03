@@ -19,7 +19,7 @@ public class JDBCAlumno implements DatabaseServiceAlumno {
             "al.email,cu.nombre AS nombre_curso,asig.asignaturaid AS asignaturaid FROM (((asignatura asig JOIN matricula ma " +
             "ON asig.matriculaID=ma.matriculaID) JOIN curso cu ON ma.cursoID=cu.cursoID) JOIN alumno al ON ma.alumnoID=al.alumnoID) " +
             "WHERE al.alumnoid=?";
-    private static final String GET_ALUMNO_ASIG_ESTADISTICAS_EXAMEN = "SELECT pf.nombre, ex.nombre, ex.nota " +
+    private static final String GET_ALUMNO_ASIG_ESTADISTICAS_EXAMEN = "SELECT asig.nombre,pf.nombre, ex.nombre, ex.nota " +
             "FROM ((asignatura asig JOIN profesor pf ON asig.profesorid=pf.profesorid) JOIN examen ex " +
             "ON ex.asignaturaid=asig.asignaturaid) WHERE asig.asignaturaid=?";
 
@@ -34,7 +34,7 @@ public class JDBCAlumno implements DatabaseServiceAlumno {
         return client.rxGetConnection()
                 .flatMap(conn -> conn.rxQueryWithParams(GET_ALUMNO_BY_ID, new JsonArray().add(alumnoID))
                         .doAfterTerminate(conn::close))
-                .map(ResultSet::toJson);
+                .map(resultSet -> resultSet.getRows().get(0));
     }
 
     @Override
@@ -50,19 +50,26 @@ public class JDBCAlumno implements DatabaseServiceAlumno {
         return client.rxGetConnection()
                 .flatMap(conn -> conn.rxQueryWithParams(GET_ALUMNO_ASIGNATURAS, new JsonArray().add(alumnoID))
                         .doAfterTerminate(conn::close))
-                .map(ResultSet::toJson);
+                .map(ResultSet::getRows)
+                .map(jsonObjects -> {
+
+                    JsonObject alumno = new JsonObject()
+                            .put("nombre", jsonObjects.get(0).getString("nombre"))
+                            .put("apellido", jsonObjects.get(0).getString("apellido"))
+                            .put("segundo_apellido", jsonObjects.get(0).getString("segundo_apellido"))
+                            .put("nombre_curso", jsonObjects.get(0).getString("nombre_curso"))
+                            .put("email", jsonObjects.get(0).getString("email"));
+                    JsonArray asignaturas = new JsonArray();
+                    for (JsonObject obj : jsonObjects) {
+                        asignaturas.add(obj.getString("nombre_asignatura"));
+                    }
+                    return alumno.put("asignaturas", asignaturas);
+                });
 
     }
 
     @Override
     public Single<JsonArray> getAlumnoAsigEstadisticas(int alumnoID) {
-        return client.rxGetConnection()
-                .flatMap(conn -> conn.rxQueryWithParams(GET_ALUMNO_ASIG_ESTADISTICAS,new JsonArray().add(alumnoID))
-                .map(ResultSet::getRows)
-                .map(jsonObjects -> jsonObjects.get(0).getString("asignaturaid"))
-                .flatMap(s -> conn.rxQueryWithParams(GET_ALUMNO_ASIG_ESTADISTICAS_EXAMEN, new JsonArray().add(Integer.valueOf(s)))
-                .doAfterTerminate(conn::close))
-                .map(ResultSet::getRows)
-                .map(JsonArray::new));
+        return null;
     }
 }

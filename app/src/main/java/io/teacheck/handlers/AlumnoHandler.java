@@ -51,6 +51,7 @@ public class AlumnoHandler {
 
     private void getAsignaturaEstadisticas(RoutingContext ctx) {
         int alumnoID = Integer.parseInt(ctx.request().getParam("alumnoID"));
+        System.out.println("hello");
         serviceAlumno.getAlumnoAsigEstadisticas(alumnoID)
                 .subscribe(jsonArray -> ctx.response()
                                 .putHeader("Content-Type", "application/json")
