@@ -69,11 +69,12 @@ public class JDBCAlumno implements DatabaseServiceAlumno {
     }
 
     @Override
-    public Single<JsonArray> getAlumnoAsigEstadisticas(int alumnoID) {
+    public Single<JsonObject> getAlumnoAsigEstadisticas(int alumnoID) {
         return client.rxGetConnection()
                 .flatMap(conn -> conn.rxQueryWithParams(GET_ALUMNO_ASIG_ESTADISTICAS, new JsonArray().add(alumnoID))
                         .doAfterTerminate(conn::close))
                 .map(ResultSet::getRows)
-                .map(JsonArray::new);
+                .map(jsonObjects -> new JsonObject()
+                        .put("asignaturas", jsonObjects));
     }
 }
