@@ -36,9 +36,9 @@ public class JDBCProfesor implements DatabaseServiceProfesor {
             "asignatura asig ON pf.profesorid=asig.profesorid) JOIN matricula ma ON asig.matriculaid=ma.matriculaid) " +
             "JOIN alumno al ON al.alumnoid=ma.alumnoid) JOIN curso cu ON cu.cursoid=ma.cursoid) JOIN alarma_semanal als " +
             "ON als.alumnoid=al.alumnoid) JOIN alarma ala ON ala.alarmaid=als.alarmaid) WHERE cu.cursoid=? ORDER BY desc_alarma";
-    private static final String GET_ASIGNATURAS = "SELECT DISTINCT pf.nombre,pf.apellido,pf.email,asig.nombre AS " +
+    private static final String GET_ASIGNATURAS = "SELECT DISTINCT pf.nombre,pf.apellido,pf.segundo_apellido,pf.email,asig.nombre AS " +
             "nombre_asignatura FROM (profesor pf JOIN asignatura asig ON pf.profesorid=asig.profesorid) WHERE pf.profesorid=?";
-    private static final String GET_CURSO_COORD = "select DISTINCT pf.nombre,pf.apellido,pf.email,cu.nombre AS " +
+    private static final String GET_CURSO_COORD = "select DISTINCT pf.nombre,pf.apellido,pf.segundo_apellido,pf.email,cu.nombre AS " +
             "nombre_curso, asig.nombre AS nombre_asignatura FROM (((profesor pf JOIN curso cu ON pf.profesorid=cu.profesorid) " +
             "JOIN matricula ma ON ma.cursoid=cu.cursoid) JOIN asignatura asig ON asig.matriculaid=ma.matriculaid) WHERE pf.profesorid=?";
     private JDBCClient client;
@@ -63,6 +63,7 @@ public class JDBCProfesor implements DatabaseServiceProfesor {
                 .flatMap(conn -> conn.rxQueryWithParams(GET_ALUMNOS_POR_ASIGNATURA, new JsonArray().add(profesorID))
                         .doAfterTerminate(conn::close))
                 .map(resultSet -> {
+                    JsonArray asignaturas = new JsonArray();
                     JsonObject obj = new JsonObject()
                             .put("curso", resultSet.getRows().get(0).getString("curso"))
                             .put("asignatura", resultSet.getRows().get(0).getString("asignatura"));
@@ -74,17 +75,18 @@ public class JDBCProfesor implements DatabaseServiceProfesor {
                                 .put("segundo_apellido", alumno.getString("sa_alumno")));
                     }
                     obj.put("alumnos", alumnos);
-                    return obj;
+                    asignaturas.add(obj);
+                    return new JsonObject().put("asignaturas", asignaturas);
                 });
     }
 
     @Override
-    public Single<JsonArray> getAlarmaPorAsignatura(int profesorID) {
+    public Single<JsonObject> getAlarmaPorAsignatura(int profesorID) {
         return getJsonArraySingle(profesorID, GET_ALARMAS_ALUMNOS_POR_ASIGNATURA);
     }
 
     @Override
-    public Single<JsonArray> getAlarmaAlumnosCoordinador(int cursoID) {
+    public Single<JsonObject> getAlarmaAlumnosCoordinador(int cursoID) {
         return getJsonArraySingle(cursoID, GET_ALARMAS_ALUMNOS_COORDINADOR);
     }
 
@@ -97,6 +99,7 @@ public class JDBCProfesor implements DatabaseServiceProfesor {
                     JsonObject profesor = new JsonObject()
                             .put("nombre", resultSet.getRows().get(0).getString("nombre"))
                             .put("apellido", resultSet.getRows().get(0).getString("apellido"))
+                            .put("segundo_apellido", resultSet.getRows().get(0).getString("segundo_apellido"))
                             .put("email", resultSet.getRows().get(0).getString("email"));
                     JsonArray asignaturas = new JsonArray();
                     for (JsonObject object : resultSet.getRows()) {
@@ -112,12 +115,13 @@ public class JDBCProfesor implements DatabaseServiceProfesor {
     public Single<JsonObject> getCursoCoord(int profesorID) {
         return client.rxGetConnection()
                 .flatMap(conn -> conn.rxQueryWithParams(GET_CURSO_COORD, new JsonArray().add(profesorID))
-                .doAfterTerminate(conn::close))
+                        .doAfterTerminate(conn::close))
                 .map(resultSet -> {
                     JsonObject profesor = new JsonObject()
                             .put("curso", resultSet.getRows().get(0).getString("nombre_curso"))
                             .put("nombre", resultSet.getRows().get(0).getString("nombre"))
                             .put("apellido", resultSet.getRows().get(0).getString("apellido"))
+                            .put("segundo_apellido", resultSet.getRows().get(0).getString("segundo_apellido"))
                             .put("email", resultSet.getRows().get(0).getString("email"));
                     JsonArray asignaturas = new JsonArray();
                     for (JsonObject object : resultSet.getRows()) {
@@ -129,7 +133,7 @@ public class JDBCProfesor implements DatabaseServiceProfesor {
                 });
     }
 
-    private Single<JsonArray> getJsonArraySingle(int id, String sql) {
+    private Single<JsonObject> getJsonArraySingle(int id, String sql) {
         return client.rxGetConnection()
                 .flatMap(conn -> conn.rxQueryWithParams(sql, new JsonArray().add(id))
                         .doAfterTerminate(conn::close))
@@ -152,7 +156,7 @@ public class JDBCProfesor implements DatabaseServiceProfesor {
                         asignatura.put("alumnos", alumnos);
                         asignaturas.add(asignatura);
                     }
-                    return asignaturas;
+                    return new JsonObject().put("asignaturas", asignaturas);
                 });
     }
 

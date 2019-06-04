@@ -12,5 +12,7 @@ public interface DatabaseServiceAlumno {
 
     Single<JsonObject> getAsignaturasAlumno(int alumnoID);
 
+    Single<JsonObject> getOnlyAsignaturas(int alumnoID);
+
     Single<JsonObject> getAlumnoAsigEstadisticas(int alumnoID);
 }

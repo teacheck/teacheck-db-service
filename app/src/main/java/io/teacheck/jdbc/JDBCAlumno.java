@@ -20,6 +20,8 @@ public class JDBCAlumno implements DatabaseServiceAlumno {
             "en.descripcion AS desc_entregable FROM ((((alumno al JOIN matricula ma ON al.alumnoid=ma.alumnoid) JOIN " +
             "asignatura asig ON asig.matriculaid=ma.matriculaid) JOIN examen ex ON asig.asignaturaid=ex.asignaturaid) " +
             "JOIN entregable en ON en.asignaturaid=asig.asignaturaid) WHERE al.alumnoid=?";
+    private static final String GET_ONLY_ASIGNATURAS = "SELECT DISTINCT asig.nombre FROM ((asignatura asig JOIN matricula" +
+            " ma ON asig.matriculaid=asig.matriculaid) JOIN alumno al ON al.alumnoid=ma.alumnoid) WHERE al.alumnoid=?";
 
     private JDBCClient client;
 
@@ -66,6 +68,21 @@ public class JDBCAlumno implements DatabaseServiceAlumno {
                     return alumno.put("asignaturas", asignaturas);
                 });
 
+    }
+
+    @Override
+    public Single<JsonObject> getOnlyAsignaturas(int alumnoID) {
+        return client.rxGetConnection()
+                .flatMap(conn -> conn.rxQueryWithParams(GET_ONLY_ASIGNATURAS, new JsonArray().add(alumnoID))
+                .doAfterTerminate(conn::close))
+                .map(resultSet -> {
+                    JsonArray asignaturas = new JsonArray();
+                    for (JsonObject obj: resultSet.getRows()) {
+                        asignaturas.add(new JsonObject().put("nombre",obj.getString("nombre")));
+                    }
+
+                    return new JsonObject().put("asignaturas", asignaturas);
+                });
     }
 
     @Override

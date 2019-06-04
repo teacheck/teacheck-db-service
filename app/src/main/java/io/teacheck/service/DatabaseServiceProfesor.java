@@ -12,9 +12,9 @@ public interface DatabaseServiceProfesor {
 
     Single<JsonObject> getAlumnosPorAsignatura(int profesorID);
 
-    Single<JsonArray> getAlarmaPorAsignatura(int profesorID);
+    Single<JsonObject> getAlarmaPorAsignatura(int profesorID);
 
-    Single<JsonArray> getAlarmaAlumnosCoordinador(int cursoID);
+    Single<JsonObject> getAlarmaAlumnosCoordinador(int cursoID);
 
     Single<JsonObject> getAsignaturas(int profesorID);
 

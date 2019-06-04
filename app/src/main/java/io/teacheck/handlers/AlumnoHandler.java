@@ -2,7 +2,6 @@ package io.teacheck.handlers;
 
 import io.teacheck.jdbc.JDBCAlumno;
 import io.teacheck.service.DatabaseServiceAlumno;
-import io.vertx.core.json.JsonArray;
 import io.vertx.rxjava.ext.jdbc.JDBCClient;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
@@ -19,6 +18,7 @@ public class AlumnoHandler {
         router.get("/api/alumnos").handler(this::getAllStudents);
         router.get("/api/alumnos/:alumnoID").handler(this::getStudent);
         router.get("/api/alumnos/:alumnoID/asignaturas").handler(this::getAsignaturasAlumno);
+        router.get("/api/alumnos/:alumnoID/asignaturas-only").handler(this::getAsignaturasOnly);
         router.get("/api/alumnos/:alumnoID/asignatura-estadisticas").handler(this::getAsignaturaEstadisticas);
     }
 
@@ -55,6 +55,15 @@ public class AlumnoHandler {
                 .subscribe(jsonArray -> ctx.response()
                                 .putHeader("Content-Type", "application/json")
                                 .end(jsonArray.encodePrettily()),
+                        throwable -> ctx.fail(throwable.getCause()));
+    }
+
+    private void getAsignaturasOnly(RoutingContext ctx) {
+        int alumnoID = Integer.parseInt(ctx.request().getParam("alumnoID"));
+        serviceAlumno.getOnlyAsignaturas(alumnoID)
+                .subscribe(entries -> ctx.response()
+                                .putHeader("Content-Type", "application/json")
+                                .end(entries.encodePrettily()),
                         throwable -> ctx.fail(throwable.getCause()));
     }
 }

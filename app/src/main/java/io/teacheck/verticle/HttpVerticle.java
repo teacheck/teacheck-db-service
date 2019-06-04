@@ -4,6 +4,7 @@ package io.teacheck.verticle;
 import io.teacheck.constants.Constants;
 import io.teacheck.handlers.AlumnoHandler;
 import io.teacheck.handlers.AsignaturaHandler;
+import io.teacheck.handlers.MLReportsHandler;
 import io.teacheck.handlers.ProfesorHandler;
 import io.teacheck.jdbc.JDBCClientPSQL;
 import io.vertx.core.logging.Logger;
@@ -43,6 +44,7 @@ public class HttpVerticle extends AbstractVerticle {
         (new AlumnoHandler(clientPSQL.getClient())).registerAlumnoHandlers(router);
         (new ProfesorHandler(clientPSQL.getClient())).registerProfesorHandlers(router);
         (new AsignaturaHandler(clientPSQL.getClient())).registerAsignaturaHandlers(router);
+        (new MLReportsHandler(clientPSQL.getClient())).registerMLReportsHandlers(router);
     }
 
     private void getJDBCClientPSQL() {
