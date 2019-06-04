@@ -15,13 +15,11 @@ public class JDBCAlumno implements DatabaseServiceAlumno {
             "cu.nombre AS nombre_curso,asig.nombre AS nombre_asignatura FROM ((asignatura asig JOIN matricula ma " +
             "ON asig.matriculaID=ma.matriculaID) JOIN curso cu ON ma.cursoID=cu.cursoID) JOIN alumno al " +
             "ON ma.alumnoID=al.alumnoID WHERE al.alumnoID=?";
-    private static final String GET_ALUMNO_ASIG_ESTADISTICAS = "SELECT al.nombre,al.apellido,al.segundo_apellido," +
-            "al.email,cu.nombre AS nombre_curso,asig.asignaturaid AS asignaturaid FROM (((asignatura asig JOIN matricula ma " +
-            "ON asig.matriculaID=ma.matriculaID) JOIN curso cu ON ma.cursoID=cu.cursoID) JOIN alumno al ON ma.alumnoID=al.alumnoID) " +
-            "WHERE al.alumnoid=?";
-    private static final String GET_ALUMNO_ASIG_ESTADISTICAS_EXAMEN = "SELECT asig.nombre,pf.nombre, ex.nombre, ex.nota " +
-            "FROM ((asignatura asig JOIN profesor pf ON asig.profesorid=pf.profesorid) JOIN examen ex " +
-            "ON ex.asignaturaid=asig.asignaturaid) WHERE asig.asignaturaid=?";
+    private static final String GET_ALUMNO_ASIG_ESTADISTICAS = "SELECT asig.nombre AS asignatura, ex.nombre AS examen," +
+            " ex.nota AS nota_examen,ex.descripcion AS desc_examen, en.nombre AS entregable, en.nota AS nota_entregable, " +
+            "en.descripcion AS desc_entregable FROM ((((alumno al JOIN matricula ma ON al.alumnoid=ma.alumnoid) JOIN " +
+            "asignatura asig ON asig.matriculaid=ma.matriculaid) JOIN examen ex ON asig.asignaturaid=ex.asignaturaid) " +
+            "JOIN entregable en ON en.asignaturaid=asig.asignaturaid) WHERE al.alumnoid=?";
 
     private JDBCClient client;
 
@@ -61,7 +59,9 @@ public class JDBCAlumno implements DatabaseServiceAlumno {
                             .put("email", jsonObjects.get(0).getString("email"));
                     JsonArray asignaturas = new JsonArray();
                     for (JsonObject obj : jsonObjects) {
-                        asignaturas.add(obj.getString("nombre_asignatura"));
+                        JsonObject asignatura = new JsonObject()
+                                .put("nombre", obj.getString("nombre_asignatura"));
+                        asignaturas.add(asignatura);
                     }
                     return alumno.put("asignaturas", asignaturas);
                 });
@@ -70,6 +70,10 @@ public class JDBCAlumno implements DatabaseServiceAlumno {
 
     @Override
     public Single<JsonArray> getAlumnoAsigEstadisticas(int alumnoID) {
-        return null;
+        return client.rxGetConnection()
+                .flatMap(conn -> conn.rxQueryWithParams(GET_ALUMNO_ASIG_ESTADISTICAS, new JsonArray().add(alumnoID))
+                        .doAfterTerminate(conn::close))
+                .map(ResultSet::getRows)
+                .map(JsonArray::new);
     }
 }
