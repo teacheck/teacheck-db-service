@@ -17,6 +17,7 @@ public class DBMigrationVerticle extends AbstractVerticle {
                     .dataSource(Constants.JDBC_DATABASE_URL, Constants.POSTGRES_USER, Constants.POSTGRES_PASSWORD)
                     .load();
             flyway.migrate();
+            flyway.validate();
             future.complete();
         }, ar -> {
             if (ar.succeeded()) {

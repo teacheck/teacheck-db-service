@@ -2,11 +2,15 @@ package io.teacheck.handlers;
 
 import io.teacheck.jdbc.JDBCAlumno;
 import io.teacheck.service.DatabaseServiceAlumno;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.rxjava.ext.jdbc.JDBCClient;
 import io.vertx.rxjava.ext.web.Router;
 import io.vertx.rxjava.ext.web.RoutingContext;
 
 public class AlumnoHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(AlumnoHandler.class);
 
     private DatabaseServiceAlumno serviceAlumno;
 
@@ -42,6 +46,7 @@ public class AlumnoHandler {
 
     private void getAsignaturasAlumno(RoutingContext ctx) {
         int alumnoID = Integer.parseInt(ctx.request().getParam("alumnoID"));
+        logger.info("Handling GET at " + ctx.currentRoute().toString());
         serviceAlumno.getAsignaturasAlumno(alumnoID)
                 .subscribe(entries -> ctx.response()
                                 .putHeader("Content-Type", "application/json")

@@ -7,14 +7,21 @@ import io.teacheck.handlers.AsignaturaHandler;
 import io.teacheck.handlers.MLReportsHandler;
 import io.teacheck.handlers.ProfesorHandler;
 import io.teacheck.jdbc.JDBCClientPSQL;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.ext.web.Router;
+import io.vertx.rxjava.ext.web.RoutingContext;
+import io.vertx.rxjava.ext.web.client.HttpResponse;
+import io.vertx.rxjava.ext.web.client.WebClient;
+import io.vertx.rxjava.ext.web.codec.BodyCodec;
 import io.vertx.rxjava.ext.web.handler.BodyHandler;
 import io.vertx.rxjava.ext.web.handler.CookieHandler;
 import io.vertx.rxjava.ext.web.handler.CorsHandler;
 import rx.Completable;
+import rx.Single;
 
 public class HttpVerticle extends AbstractVerticle {
     private static final Logger logger = LoggerFactory.getLogger(HttpVerticle.class);
